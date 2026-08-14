@@ -19,6 +19,8 @@ build/
 
 # 本工程临时脚本（以 _ 开头）
 _*.py
+_*.ps1
+push_to_github.ps1
 
 # 数据与凭据
 *.tar.gz
