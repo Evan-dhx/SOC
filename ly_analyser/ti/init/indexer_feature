@@ -1,0 +1,23 @@
+# indexer_feature - Pattern config for port_scan/ip_scan/service/assetsrv filters
+# Format: TYPE,sip,unused,dip,dport,protocol,peers,flows
+# Generated from database seed data (t_event_config_port_scan/ip_scan/srv)
+
+# === PORT_SCAN (from t_event_config_port_scan) ===
+# id=1: min_peerips=1000, port=NULL, protocol=NULL
+PORT_SCAN,,,,,,1000,
+# id=2: min_peerips=300, port=22
+PORT_SCAN,,,,22,,300,
+# id=3: min_peerips=300, port=3389
+PORT_SCAN,,,,3389,,300,
+
+# === IP_SCAN (from t_event_config_ip_scan) ===
+# id=1: min_peerports=1000, sip=NULL, dip=NULL, protocol=NULL
+IP_SCAN,,,,,,1000,
+
+# === SRV (from t_event_config_srv) ===
+# id=1: min_portsessions=3000, port=NULL, protocol=NULL
+SRV,,,,,,,3000
+# id=2: min_portsessions=300, port=22
+SRV,,,,22,,,300
+# id=3: min_portsessions=300, port=3389
+SRV,,,,3389,,,300

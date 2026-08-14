@@ -31,3 +31,7 @@ login_*.png
 ti_server/certs/
 ti_server/db.env
 *.pyc
+
+# 排除 Python 文件上传（保留 ti_server 正式源码）
+*.py
+!ti_server/server.py

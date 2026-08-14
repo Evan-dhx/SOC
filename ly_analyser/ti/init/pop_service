@@ -1,0 +1,6 @@
+# Popular Service IP List
+# Format: IP,description
+# Network servers and important infrastructure IPs
+10.10.102.220,Main Server
+10.10.102.1,Gateway
+127.0.0.1,Localhost
