@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: ly_server
+title: 流影管理引擎 ly_server
+scope:
+    - ly_server/
+source_files: []
+depends_on: []
+related_to:
+    - path: ly_analyser
+    - path: ly_vis

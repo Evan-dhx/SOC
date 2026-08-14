@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天鯨威胁情报服务器 - 管理平台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #081120;
+    color: #d8f4ff;
+    min-height: 100vh;
+}
+/* ================= 登录页 ================= */
+#login-view {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background:
+        radial-gradient(600px 400px at 20% 20%, rgba(0,120,255,.18), transparent 60%),
+        radial-gradient(500px 350px at 80% 80%, rgba(0,229,255,.14), transparent 60%),
+        #081120;
+}
+.login-box {
+    width: 380px; padding: 36px 38px;
+    background: linear-gradient(160deg, rgba(10,26,52,.95), rgba(4,14,30,.97));
+    border: 1px solid rgba(0,229,255,.25); border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 34px rgba(0,229,255,.12);
+}
+.login-title {
+    text-align: center; font-size: 20px; letter-spacing: 6px; color: #7df9ff;
+    text-shadow: 0 0 12px rgba(0,229,255,.5); margin-bottom: 8px;
+}
+.login-sub { text-align: center; font-size: 12px; color: rgba(160,210,240,.6); margin-bottom: 26px; letter-spacing: 2px; }
+.login-row { margin-bottom: 16px; }
+.login-row label { display: block; font-size: 13px; color: rgba(210,235,255,.8); margin-bottom: 6px; letter-spacing: 1px; }
+.login-row input {
+    width: 100%; padding: 10px 12px; font-size: 14px; color: #e0f7ff;
+    background: rgba(3,14,30,.9); border: 1px solid rgba(0,229,255,.28);
+    border-radius: 8px; outline: none; transition: all .3s;
+}
+.login-row input:focus { border-color: #00e5ff; box-shadow: 0 0 12px rgba(0,229,255,.3); }
+.login-btn {
+    width: 100%; padding: 11px 0; margin-top: 6px; border: none; border-radius: 8px;
+    background: linear-gradient(90deg, #0072ff, #00e5ff); color: #fff;
+    font-size: 15px; letter-spacing: 8px; cursor: pointer;
+    box-shadow: 0 0 16px rgba(0,229,255,.35); transition: all .3s;
+}
+.login-btn:hover { box-shadow: 0 0 26px rgba(0,229,255,.6); }
+.login-msg { margin-top: 12px; text-align: center; font-size: 13px; min-height: 18px; color: #ffa63f; }
+/* ================= 主界面 ================= */
+#main-view { display: none; }
+.nav {
+    display: flex; align-items: center; padding: 0 26px; height: 56px;
+    background: linear-gradient(180deg, rgba(13,32,64,.98), rgba(8,20,42,.98));
+    border-bottom: 1px solid rgba(0,229,255,.2);
+    position: sticky; top: 0; z-index: 10;
+}
+.nav-title { font-size: 16px; letter-spacing: 4px; color: #7df9ff; text-shadow: 0 0 10px rgba(0,229,255,.4); }
+.nav-tabs { display: flex; margin-left: 40px; gap: 6px; }
+.nav-tab {
+    padding: 6px 18px; font-size: 13px; letter-spacing: 2px; cursor: pointer;
+    color: rgba(200,230,255,.7); border-radius: 6px 6px 0 0; transition: all .3s;
+    border-bottom: 2px solid transparent;
+}
+.nav-tab:hover { color: #7df9ff; }
+.nav-tab.active { color: #7df9ff; border-bottom-color: #00e5ff; background: rgba(0,229,255,.08); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.nav-user { font-size: 13px; color: rgba(200,230,255,.8); }
+.nav-logout {
+    padding: 4px 14px; font-size: 12px; letter-spacing: 2px; cursor: pointer;
+    border: 1px solid rgba(0,229,255,.4); border-radius: 12px; color: #7df9ff;
+    background: rgba(0,229,255,.08); transition: all .3s;
+}
+.nav-logout:hover { background: rgba(0,229,255,.18); }
+.page { padding: 22px 26px; display: none; }
+.page.active { display: block; }
+/* 统计卡片 */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.stat-card {
+    padding: 18px; border-radius: 10px; text-align: center;
+    background: linear-gradient(160deg, rgba(10,26,52,.9), rgba(4,14,30,.94));
+    border: 1px solid rgba(0,229,255,.2);
+}
+.stat-num { font-size: 28px; font-weight: bold; color: #7df9ff; text-shadow: 0 0 14px rgba(0,229,255,.4); }
+.stat-label { margin-top: 6px; font-size: 12px; color: rgba(160,210,240,.7); letter-spacing: 2px; }
+/* 面板 */
+.panel {
+    background: linear-gradient(160deg, rgba(10,26,52,.9), rgba(4,14,30,.94));
+    border: 1px solid rgba(0,229,255,.2); border-radius: 10px; padding: 18px;
+}
+.panel-title { font-size: 14px; letter-spacing: 3px; color: #7df9ff; margin-bottom: 14px;
+    border-left: 3px solid rgba(0,229,255,.7); padding-left: 10px; }
+/* 工具条 */
+.toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+.toolbar input, .toolbar select {
+    padding: 7px 10px; font-size: 13px; color: #e0f7ff; background: rgba(3,14,30,.9);
+    border: 1px solid rgba(0,229,255,.28); border-radius: 6px; outline: none;
+}
+.toolbar input:focus, .toolbar select:focus { border-color: #00e5ff; }
+.btn {
+    padding: 7px 16px; font-size: 13px; letter-spacing: 2px; cursor: pointer;
+    border-radius: 6px; border: none; transition: all .3s;
+}
+.btn-primary { background: linear-gradient(90deg, #0072ff, #00e5ff); color: #fff; box-shadow: 0 0 12px rgba(0,229,255,.3); }
+.btn-primary:hover { box-shadow: 0 0 20px rgba(0,229,255,.5); }
+.btn-ghost { background: transparent; border: 1px solid rgba(0,229,255,.4); color: #7df9ff; }
+.btn-ghost:hover { background: rgba(0,229,255,.1); }
+.btn-danger { background: transparent; border: 1px solid rgba(255,80,80,.5); color: #ff8080; }
+.btn-danger:hover { background: rgba(255,80,80,.12); }
+.btn-sm { padding: 3px 10px; font-size: 12px; letter-spacing: 1px; }
+/* 表格 */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid rgba(0,229,255,.12); }
+th { color: rgba(0,229,255,.8); font-weight: normal; letter-spacing: 1px; background: rgba(0,229,255,.05); white-space: nowrap; }
+td { color: rgba(210,235,255,.9); }
+tr:hover td { background: rgba(0,229,255,.05); }
+.tag {
+    display: inline-block; padding: 1px 8px; border-radius: 8px; font-size: 11px; margin-right: 4px;
+    background: rgba(0,229,255,.12); color: #7df9ff; border: 1px solid rgba(0,229,255,.25);
+}
+.score-h { color: #ff6b6b; font-weight: bold; }
+.score-m { color: #ffa63f; font-weight: bold; }
+.score-l { color: #7df9ff; }
+.pager { display: flex; gap: 8px; margin-top: 14px; align-items: center; font-size: 13px; color: rgba(200,230,255,.7); }
+/* 弹窗 */
+.mask { position: fixed; inset: 0; background: rgba(3,10,22,.68); backdrop-filter: blur(6px);
+    z-index: 100; display: none; align-items: center; justify-content: center; }
+.mask.show { display: flex; }
+.modal {
+    width: 520px; max-width: 94vw; max-height: 88vh; overflow: auto;
+    background: linear-gradient(160deg, rgba(10,26,52,.98), rgba(4,14,30,.99));
+    border: 1px solid rgba(0,229,255,.25); border-radius: 12px; padding: 24px 26px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.6);
+}
+.modal-title { font-size: 15px; letter-spacing: 3px; color: #7df9ff; margin-bottom: 16px;
+    border-left: 3px solid rgba(0,229,255,.7); padding-left: 10px; }
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 12px; color: rgba(210,235,255,.8); margin-bottom: 5px; }
+.form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 8px 10px; font-size: 13px; color: #e0f7ff;
+    background: rgba(3,14,30,.9); border: 1px solid rgba(0,229,255,.28);
+    border-radius: 6px; outline: none;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: #00e5ff; }
+.form-row textarea { resize: vertical; min-height: 60px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.modal-actions { display: flex; gap: 12px; margin-top: 18px; }
+.modal-actions .btn { flex: 1; padding: 9px 0; }
+.msg { margin-top: 10px; font-size: 13px; min-height: 18px; text-align: center; color: #7df9ff; }
+.msg.err { color: #ff8080; }
+.hint { font-size: 12px; color: rgba(150,200,230,.55); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ================= 登录 ================= -->
+<div id="login-view">
+    <div class="login-box">
+        <div class="login-title">天鯨 · 威胁情报</div>
+        <div class="login-sub">THREAT INTELLIGENCE SERVER</div>
+        <div class="login-row"><label>账号</label><input id="login-user" placeholder="请输入账号"></div>
+        <div class="login-row"><label>密码</label><input id="login-pass" type="password" placeholder="请输入密码"></div>
+        <button class="login-btn" id="login-btn">登 录</button>
+        <div class="login-msg" id="login-msg"></div>
+    </div>
+</div>
+
+<!-- ================= 主界面 ================= -->
+<div id="main-view">
+    <div class="nav">
+        <span class="nav-title">天鯨 · 威胁情报服务器</span>
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-page="dash">仪表盘</div>
+            <div class="nav-tab" data-page="client">客户端管理</div>
+            <div class="nav-tab" data-page="ioc">情报管理</div>
+            <div class="nav-tab" data-page="source">情报源管理</div>
+            <div class="nav-tab" data-page="cfg">系统配置</div>
+        </div>
+        <div class="nav-right">
+            <span class="nav-user" id="nav-user"></span>
+            <span class="nav-logout" id="logout-btn">退出</span>
+        </div>
+    </div>
+
+    <!-- 仪表盘 -->
+    <div class="page active" id="page-dash">
+        <div class="stats" id="stat-cards"></div>
+        <div class="panel">
+            <div class="panel-title">对接说明</div>
+            <table>
+                <tr><th style="width:200px">项目</th><th>内容</th></tr>
+                <tr><td>管理界面</td><td>/（本页面）</td></tr>
+                <tr><td>JWT 签发接口</td><td>POST /apisix/plugin/jwt/sign?key=服务KEY（兼容流影 threatinfo 协议）</td></tr>
+                <tr><td>情报查询接口</td><td>GET|POST /query?ip=1.2.3.4&jwt=令牌（也支持根路径 /）</td></tr>
+                <tr><td>流影对接配置</td><td>tisrs.conf 中 KEY=服务KEY，HOST=本机IP，PORT=本服务端口，URL=/query</td></tr>
+                <tr><td>查询返回</td><td>[{"ip":"...","threat":"botnet","score":95,"tag":"...","source":"...","confidence":80}]</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- 客户端管理 -->
+    <div class="page" id="page-client">
+        <div class="panel">
+            <div class="toolbar">
+                <button class="btn btn-primary" id="client-add">新增客户端</button>
+                <span class="hint" style="margin-left:auto">客户端 Key 用于换取查询令牌（流影 tisrs.conf KEY 字段），Token 用于直查与全量更新（/export）</span>
+            </div>
+            <table>
+                <thead><tr>
+                    <th style="width:50px">ID</th><th>客户名称</th><th>单号</th><th style="width:190px">Key</th>
+                    <th style="width:190px">Token</th><th style="width:170px">允许更新至</th><th style="width:110px">最后更新</th>
+                    <th style="width:70px">启用</th><th style="width:340px">操作</th>
+                </tr></thead>
+                <tbody id="client-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 情报管理 -->
+    <div class="page" id="page-ioc">
+        <div class="panel">
+            <div class="toolbar">
+                <input id="f-q" placeholder="搜索 值/标签/备注" style="width:200px">
+                <select id="f-type">
+                    <option value="">全部类型</option>
+                    <option value="ip">IP</option>
+                    <option value="domain">域名</option>
+                    <option value="url">URL</option>
+                    <option value="hash">哈希</option>
+                </select>
+                <input id="f-threat" placeholder="威胁类型" style="width:130px">
+                <button class="btn btn-primary" id="ioc-search">查询</button>
+                <button class="btn btn-ghost" id="ioc-add">新增情报</button>
+                <button class="btn btn-ghost" id="ioc-batch">批量导入</button>
+                <button class="btn btn-ghost" id="ioc-export">导出JSON</button>
+                <span class="hint" style="margin-left:auto" id="ioc-total"></span>
+            </div>
+            <table>
+                <thead><tr>
+                    <th style="width:46px">ID</th><th>类型</th><th>情报值</th><th>威胁类型</th>
+                    <th style="width:70px">评分</th><th>标签</th><th>来源</th><th style="width:70px">置信度</th>
+                    <th>过期</th><th style="width:130px">操作</th>
+                </tr></thead>
+                <tbody id="ioc-tbody"></tbody>
+            </table>
+            <div class="pager" id="ioc-pager"></div>
+        </div>
+    </div>
+
+    <!-- 情报源管理 -->
+    <div class="page" id="page-source">
+        <div class="panel">
+            <div class="toolbar">
+                <button class="btn btn-primary" id="source-add">新增情报源</button>
+                <button class="btn btn-ghost" id="source-refresh">刷新</button>
+                <span class="hint" style="margin-left:auto">对接开源情报源，启用后由后台线程按设定周期自动拉取入库；支持 ThreatFox（公开 CSV，无需 Key）与通用 CSV 源</span>
+            </div>
+            <table>
+                <thead><tr>
+                    <th style="width:46px">ID</th><th>名称</th><th style="width:90px">类型</th><th>地址</th>
+                    <th style="width:76px">周期(分)</th><th style="width:66px">保留(天)</th><th style="width:60px">启用</th>
+                    <th style="width:140px">上次拉取</th><th style="width:56px">状态</th><th style="width:56px">条数</th>
+                    <th style="width:300px">操作</th>
+                </tr></thead>
+                <tbody id="source-tbody"></tbody>
+            </table>
+            <div class="msg" id="source-msg"></div>
+        </div>
+    </div>
+
+    <!-- 系统配置 -->
+    <div class="page" id="page-cfg">
+        <div class="panel" style="margin-bottom:16px">
+            <div class="panel-title">服务配置</div>
+            <div class="form-row"><label>服务 KEY（threatinfo 对接密钥）</label>
+                <input id="cfg-key"><div class="hint">填写到流影 tisrs.conf 的 KEY 字段；重新生成后旧 key 立即失效</div></div>
+            <div class="form-grid">
+                <div class="form-row"><label>JWT 签名密钥</label><input id="cfg-jwt"></div>
+                <div class="form-row"><label>查询令牌有效期（秒）</label><input id="cfg-expire"></div>
+            </div>
+            <div class="form-row"><label>对外查询路径</label><input id="cfg-url">
+                <div class="hint">流影 tisrs.conf 的 URL 字段与此一致（默认 /query）</div></div>
+            <button class="btn btn-primary" id="cfg-save">保存配置</button>
+            <button class="btn btn-ghost" id="cfg-regen" style="margin-left:10px">重新生成 KEY 与密钥</button>
+            <div class="msg" id="cfg-msg"></div>
+        </div>
+        <div class="panel" style="margin-bottom:16px">
+            <div class="panel-title">HTTPS 证书管理</div>
+            <div class="form-row"><label>PFX 证书文件（含私钥与证书链）</label>
+                <input id="cert-file" type="file" accept=".pfx,.p12"></div>
+            <div class="form-row"><label>证书密码（PFX 导出密码）</label>
+                <input id="cert-pass" type="password" placeholder="无密码可留空"></div>
+            <div class="form-row"><label>当前证书状态</label>
+                <div id="cert-status" class="hint">检测中…</div></div>
+            <button class="btn btn-primary" id="cert-upload">上传证书</button>
+            <button class="btn btn-ghost" id="cert-enable" style="margin-left:10px">启用 HTTPS</button>
+            <button class="btn btn-ghost" id="cert-disable" style="margin-left:10px">停用 HTTPS</button>
+            <div class="msg" id="cert-msg"></div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">修改管理员密码</div>
+            <div class="form-grid">
+                <div class="form-row"><label>原密码</label><input id="pwd-old" type="password"></div>
+                <div class="form-row"><label>新密码</label><input id="pwd-new" type="password"></div>
+            </div>
+            <button class="btn btn-primary" id="pwd-save">修改密码</button>
+            <div class="msg" id="pwd-msg"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 客户端编辑弹窗 ================= -->
+<div class="mask" id="client-modal">
+    <div class="modal">
+        <div class="modal-title" id="client-modal-title">新增客户端</div>
+        <div class="form-grid">
+            <div class="form-row"><label>客户名称 *</label><input id="c-name" placeholder="如：某公安厅"></div>
+            <div class="form-row"><label>单号</label><input id="c-order" placeholder="合同/授权单号"></div>
+        </div>
+        <div class="form-row"><label>联系人 / 备注</label><input id="c-contact"></div>
+        <div class="form-row"><label>允许来源 IP（逗号分隔，支持 CIDR，留空=不限制）</label>
+            <input id="c-ips" placeholder="如：10.10.1.0/24, 10.10.2.5">
+            <div class="hint">该客户端使用 Key/Token 查询与更新时的来源 IP 白名单</div></div>
+        <div class="form-grid">
+            <div class="form-row"><label>允许更新截止日期（YYYY-MM-DD，留空=不限）</label><input id="c-window" placeholder="如：2028-10-10">
+            <div class="hint">超过该日期后，客户端将无法执行全量更新（/export）</div></div>
+            <div class="form-row"><label>启用</label>
+                <select id="c-enabled"><option value="1">启用</option><option value="0">禁用</option></select></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="c-save">保 存</button>
+            <button class="btn btn-ghost" id="c-cancel">取 消</button>
+        </div>
+        <div class="msg" id="c-msg"></div>
+    </div>
+</div>
+
+<!-- ================= 更新记录弹窗 ================= -->
+<div class="mask" id="client-log-modal">
+    <div class="modal">
+        <div class="modal-title">客户端更新记录</div>
+        <div class="form-row"><label id="cl-log-head"></label>
+            <textarea id="cl-log-body" rows="10" readonly style="width:100%;background:rgba(3,14,30,.9);color:#e0f7ff;border:1px solid rgba(0,229,255,.28);border-radius:6px;padding:10px;font-size:13px"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="cl-close">关 闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 情报编辑弹窗 ================= -->
+<div class="mask" id="ioc-modal">
+    <div class="modal">
+        <div class="modal-title" id="ioc-modal-title">新增情报</div>
+        <div class="form-grid">
+            <div class="form-row"><label>类型</label>
+                <select id="m-type">
+                    <option value="ip">IP</option><option value="domain">域名</option>
+                    <option value="url">URL</option><option value="hash">哈希</option>
+                </select></div>
+            <div class="form-row"><label>威胁类型</label><input id="m-threat" placeholder="botnet/dga/scan/mining..."></div>
+        </div>
+        <div class="form-row"><label>情报值</label><input id="m-value" placeholder="如 1.2.3.4 / evil.com / http://x / md5"></div>
+        <div class="form-grid">
+            <div class="form-row"><label>风险评分 0-100</label><input id="m-score" type="number" value="80"></div>
+            <div class="form-row"><label>置信度 0-100</label><input id="m-confidence" type="number" value="80"></div>
+        </div>
+        <div class="form-grid">
+            <div class="form-row"><label>标签（逗号分隔）</label><input id="m-tags" placeholder="恶意IP,僵尸网络"></div>
+            <div class="form-row"><label>来源</label><input id="m-source" placeholder="内部/厂商/开源"></div>
+        </div>
+        <div class="form-row"><label>过期时间（Unix 时间戳，0=永久）</label><input id="m-expire" type="number" value="0"></div>
+        <div class="form-row"><label>备注</label><textarea id="m-note"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="m-save">保 存</button>
+            <button class="btn btn-ghost" id="m-cancel">取 消</button>
+        </div>
+        <div class="msg" id="m-msg"></div>
+    </div>
+</div>
+
+<!-- ================= 批量导入弹窗 ================= -->
+<div class="mask" id="batch-modal">
+    <div class="modal">
+        <div class="modal-title">批量导入情报</div>
+        <div class="form-row"><label>每行一条，格式：类型,值,威胁类型,评分,标签,来源</label>
+            <textarea id="b-text" rows="10" placeholder="ip,1.2.3.4,botnet,95,恶意IP,内部&#10;domain,evil.com,dga,85,DGA,厂商&#10;hash,5d41402abc4b2a76b9719d911017c592,hash,70,恶意样本,开源"></textarea></div>
+        <div class="hint">类型支持 ip/domain/url/hash；评分、标签、来源可省略</div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="b-save">导 入</button>
+            <button class="btn btn-ghost" id="b-cancel">取 消</button>
+        </div>
+        <div class="msg" id="b-msg"></div>
+    </div>
+</div>
+
+<!-- ================= 情报源编辑弹窗 ================= -->
+<div class="mask" id="source-modal">
+    <div class="modal">
+        <div class="modal-title" id="source-modal-title">新增情报源</div>
+        <div class="form-row"><label>名称 *</label><input id="s-name" placeholder="如：ThreatFox 威胁情报"></div>
+        <div class="form-grid">
+            <div class="form-row"><label>类型</label>
+                <select id="s-type">
+                    <option value="threatfox">ThreatFox（abuse.ch）</option>
+                    <option value="urlhaus">URLhaus（abuse.ch）</option>
+                    <option value="feodo">Feodo Tracker（abuse.ch）</option>
+                    <option value="iplist">IP 列表（纯文本）</option>
+                    <option value="csv">通用 CSV</option>
+                </select></div>
+            <div class="form-row"><label>启用</label>
+                <select id="s-enabled"><option value="1">启用</option><option value="0">禁用</option></select></div>
+        </div>
+        <div class="form-row"><label>拉取地址 URL</label><input id="s-url" placeholder="留空使用所选类型默认地址">
+            <div class="hint">默认地址：ThreatFox recent CSV / URLhaus recent CSV / Feodo IP Blocklist；IP 列表与通用 CSV 必填</div></div>
+        <div class="form-row"><label>API Key（可选，用于需认证的源）</label><input id="s-apikey" type="password" placeholder="无则留空"></div>
+        <div class="form-grid">
+            <div class="form-row"><label>拉取周期（分钟，最小 10）</label><input id="s-interval" type="number" value="1440"></div>
+            <div class="form-row"><label>保留天数（0=永久保留）</label><input id="s-keepdays" type="number" value="30">
+            <div class="hint">拉取时自动清理该源超过保留天数的旧情报</div></div>
+        </div>
+        <div class="form-row"><label>字段映射（IP 列表 / 通用 CSV）</label><textarea id="s-mapping" rows="3" placeholder='{"threat":"恶意IP","score":70,"tags":"blocklist","confidence":80}'></textarea>
+            <div class="hint">IP 列表：配置默认威胁/评分/标签/置信度；通用 CSV：JSON 指定列（{"skip_header":true,"cols":{"ioc":0,"type":1,"threat":2,"tags":3,"confidence":4,"score":5}}），type 列留空自动识别</div></div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" id="s-save">保 存</button>
+            <button class="btn btn-ghost" id="s-cancel">取 消</button>
+        </div>
+        <div class="msg" id="s-msg"></div>
+    </div>
+</div>
+
+<!-- ================= 情报源拉取日志弹窗 ================= -->
+<div class="mask" id="source-log-modal">
+    <div class="modal">
+        <div class="modal-title">情报源拉取日志</div>
+        <div class="form-row"><label id="sl-log-head"></label>
+            <textarea id="sl-log-body" rows="10" readonly style="width:100%;background:rgba(3,14,30,.9);color:#e0f7ff;border:1px solid rgba(0,229,255,.28);border-radius:6px;padding:10px;font-size:13px"></textarea></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="sl-close">关 闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var TOKEN = localStorage.getItem('ti_token') || '';
+var CUR_PAGE = 1, CUR_EDIT_ID = null;
+
+function api(path, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Content-Type'] = 'application/json';
+    if (TOKEN) opts.headers['Authorization'] = 'Bearer ' + TOKEN;
+    return fetch(path, opts).then(function (r) {
+        return r.json().catch(function () { return {}; });
+    }).then(function (d) {
+        if (d.code === 401) { showLogin(); throw new Error(d.msg || '未登录'); }
+        return d;
+    });
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+}); }
+function fmtTime(t) {
+    if (!t) return '永久';
+    var d = new Date(t * 1000);
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+function fmtExpire(t) {
+    if (!t) return '<span class="tag">永久</span>';
+    return t < Date.now() / 1000 ? '<span class="tag" style="color:#ff8080;border-color:rgba(255,80,80,.5)">已过期</span>' : fmtTime(t);
+}
+
+/* ================= 登录 ================= */
+function showLogin() { document.getElementById('login-view').style.display = 'flex';
+    document.getElementById('main-view').style.display = 'none'; }
+function showMain(user) {
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('main-view').style.display = 'block';
+    document.getElementById('nav-user').textContent = user || '';
+}
+document.getElementById('login-btn').addEventListener('click', function () {
+    var msg = document.getElementById('login-msg');
+    msg.textContent = '';
+    api('/api/login', { method: 'POST', body: JSON.stringify({
+        user: document.getElementById('login-user').value,
+        pass: document.getElementById('login-pass').value
+    }) }).then(function (d) {
+        if (d.code === 200) {
+            TOKEN = d.token; localStorage.setItem('ti_token', d.token);
+            showMain(d.user); loadStats(); loadIocs(); loadCfg();
+        } else { msg.textContent = d.msg || '登录失败'; }
+    }).catch(function (e) { msg.textContent = e.message; });
+});
+document.getElementById('login-pass').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+document.getElementById('logout-btn').addEventListener('click', function () {
+    api('/api/logout', { method: 'POST' }).finally(function () {
+        TOKEN = ''; localStorage.removeItem('ti_token'); showLogin();
+    });
+});
+
+/* ================= 页签 ================= */
+document.querySelectorAll('.nav-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+        document.querySelectorAll('.nav-tab').forEach(function (t) { t.classList.remove('active'); });
+        document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+        tab.classList.add('active');
+        document.getElementById('page-' + tab.dataset.page).classList.add('active');
+        if (tab.dataset.page === 'dash') loadStats();
+        if (tab.dataset.page === 'client') loadClients();
+        if (tab.dataset.page === 'ioc') loadIocs();
+        if (tab.dataset.page === 'source') loadSources();
+        if (tab.dataset.page === 'cfg') loadCfg();
+        if (tab.dataset.page === 'cfg') loadCert();
+    });
+});
+
+/* ================= 仪表盘 ================= */
+function loadStats() {
+    api('/api/stats').then(function (d) {
+        if (d.code !== 200) return;
+        var box = document.getElementById('stat-cards');
+        var cards = [
+            ['总计', d.total], ['IP', d.by_type.ip], ['域名', d.by_type.domain],
+            ['URL', d.by_type.url], ['哈希', d.by_type.hash], ['已过期', d.expired]
+        ];
+        box.innerHTML = cards.map(function (c) {
+            return '<div class="stat-card"><div class="stat-num">' + c[1] + '</div><div class="stat-label">' + c[0] + '</div></div>';
+        }).join('');
+    });
+}
+
+/* ================= 情报管理 ================= */
+function loadIocs() {
+    var q = document.getElementById('f-q').value;
+    var type = document.getElementById('f-type').value;
+    var threat = document.getElementById('f-threat').value;
+    api('/api/iocs?page=' + CUR_PAGE + '&size=20&q=' + encodeURIComponent(q) +
+        '&type=' + encodeURIComponent(type) + '&threat=' + encodeURIComponent(threat)).then(function (d) {
+        if (d.code !== 200) return;
+        document.getElementById('ioc-total').textContent = '共 ' + d.total + ' 条';
+        var tbody = document.getElementById('ioc-tbody');
+        tbody.innerHTML = d.data.map(function (r) {
+            var sc = r.score >= 75 ? 'score-h' : (r.score >= 50 ? 'score-m' : 'score-l');
+            var tags = (r.tags || '').split(',').filter(Boolean).map(function (t) {
+                return '<span class="tag">' + esc(t.trim()) + '</span>';
+            }).join('');
+            return '<tr><td>' + r.id + '</td><td><span class="tag">' + r.type + '</span></td>' +
+                '<td title="' + esc(r.note) + '">' + esc(r.value) + '</td><td>' + esc(r.threat) + '</td>' +
+                '<td class="' + sc + '">' + r.score + '</td><td>' + tags + '</td>' +
+                '<td>' + esc(r.source) + '</td><td>' + r.confidence + '%</td>' +
+                '<td>' + fmtExpire(r.expire) + '</td>' +
+                '<td><button class="btn btn-ghost btn-sm" onclick="editIoc(' + r.id + ')">编辑</button> ' +
+                '<button class="btn btn-danger btn-sm" onclick="delIoc(' + r.id + ')">删除</button></td></tr>';
+        }).join('');
+        var totalPage = Math.max(1, Math.ceil(d.total / d.size));
+        document.getElementById('ioc-pager').innerHTML =
+            '<button class="btn btn-ghost btn-sm" onclick="pageIoc(1)">首页</button> ' +
+            '<button class="btn btn-ghost btn-sm" onclick="pageIoc(' + (CUR_PAGE - 1) + ')">上一页</button> ' +
+            '<span>第 ' + CUR_PAGE + ' / ' + totalPage + ' 页</span> ' +
+            '<button class="btn btn-ghost btn-sm" onclick="pageIoc(' + (CUR_PAGE + 1) + ')">下一页</button> ' +
+            '<button class="btn btn-ghost btn-sm" onclick="pageIoc(' + totalPage + ')">末页</button>';
+    });
+}
+function pageIoc(p) { if (p < 1) return; CUR_PAGE = p; loadIocs(); }
+document.getElementById('ioc-search').addEventListener('click', function () { CUR_PAGE = 1; loadIocs(); });
+document.getElementById('f-q').addEventListener('keydown', function (e) { if (e.key === 'Enter') loadIocs(); });
+
+function openIocModal() {
+    document.getElementById('ioc-modal').classList.add('show');
+    document.getElementById('m-msg').textContent = '';
+}
+function closeIocModal() { document.getElementById('ioc-modal').classList.remove('show'); }
+document.getElementById('ioc-add').addEventListener('click', function () {
+    CUR_EDIT_ID = null;
+    document.getElementById('ioc-modal-title').textContent = '新增情报';
+    ['m-value', 'm-threat', 'm-tags', 'm-source', 'm-note'].forEach(function (id) {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('m-type').value = 'ip';
+    document.getElementById('m-score').value = 80;
+    document.getElementById('m-confidence').value = 80;
+    document.getElementById('m-expire').value = 0;
+    openIocModal();
+});
+function editIoc(id) {
+    api('/api/iocs?page=1&size=200').then(function (d) {
+        var r = d.data.filter(function (x) { return x.id === id; })[0];
+        if (!r) return;
+        CUR_EDIT_ID = id;
+        document.getElementById('ioc-modal-title').textContent = '编辑情报 #' + id;
+        document.getElementById('m-type').value = r.type;
+        document.getElementById('m-value').value = r.value;
+        document.getElementById('m-threat').value = r.threat;
+        document.getElementById('m-score').value = r.score;
+        document.getElementById('m-confidence').value = r.confidence;
+        document.getElementById('m-tags').value = r.tags;
+        document.getElementById('m-source').value = r.source;
+        document.getElementById('m-expire').value = r.expire;
+        document.getElementById('m-note').value = r.note;
+        openIocModal();
+    });
+}
+function delIoc(id) {
+    if (!confirm('确定删除情报 #' + id + ' ？')) return;
+    api('/api/iocs/' + id, { method: 'DELETE' }).then(function (d) { loadIocs(); loadStats(); });
+}
+document.getElementById('m-save').addEventListener('click', function () {
+    var body = {
+        type: document.getElementById('m-type').value,
+        value: document.getElementById('m-value').value,
+        threat: document.getElementById('m-threat').value,
+        score: parseInt(document.getElementById('m-score').value) || 0,
+        confidence: parseInt(document.getElementById('m-confidence').value) || 0,
+        tags: document.getElementById('m-tags').value,
+        source: document.getElementById('m-source').value,
+        expire: parseInt(document.getElementById('m-expire').value) || 0,
+        note: document.getElementById('m-note').value
+    };
+    var p = CUR_EDIT_ID ? api('/api/iocs/' + CUR_EDIT_ID, { method: 'PUT', body: JSON.stringify(body) })
+                        : api('/api/iocs', { method: 'POST', body: JSON.stringify(body) });
+    p.then(function (d) {
+        var msg = document.getElementById('m-msg');
+        if (d.code === 200) { closeIocModal(); loadIocs(); loadStats(); }
+        else { msg.textContent = d.msg || '操作失败'; msg.classList.add('err'); }
+    });
+});
+document.getElementById('m-cancel').addEventListener('click', closeIocModal);
+document.getElementById('ioc-modal').addEventListener('click', function (e) {
+    if (e.target === this) closeIocModal();
+});
+
+/* ================= 批量导入 ================= */
+document.getElementById('ioc-batch').addEventListener('click', function () {
+    document.getElementById('b-text').value = '';
+    document.getElementById('b-msg').textContent = '';
+    document.getElementById('batch-modal').classList.add('show');
+});
+document.getElementById('b-cancel').addEventListener('click', function () {
+    document.getElementById('batch-modal').classList.remove('show');
+});
+document.getElementById('b-save').addEventListener('click', function () {
+    var items = [];
+    document.getElementById('b-text').value.split('\n').forEach(function (line) {
+        line = line.trim();
+        if (!line || line.startsWith('#')) return;
+        var p = line.split(',').map(function (s) { return s.trim(); });
+        var types = { ip: 'ip', domain: 'domain', url: 'url', hash: 'hash', '': 'ip' };
+        items.push({
+            type: types[p[0]] || 'ip', value: p[1] || '', threat: p[2] || '',
+            score: parseInt(p[3]) || 50, tags: p[4] || '', source: p[5] || ''
+        });
+    });
+    api('/api/iocs/batch', { method: 'POST', body: JSON.stringify({ items: items }) }).then(function (d) {
+        var msg = document.getElementById('b-msg');
+        if (d.code === 200) { msg.textContent = d.msg; loadIocs(); loadStats(); }
+        else { msg.textContent = d.msg || '导入失败'; msg.classList.add('err'); }
+    });
+});
+
+/* ================= 导出 ================= */
+document.getElementById('ioc-export').addEventListener('click', function () {
+    api('/api/iocs?page=1&size=200').then(function (d) {
+        var blob = new Blob([JSON.stringify(d.data, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ti_iocs.json';
+        a.click();
+    });
+});
+
+/* ================= 情报源管理 ================= */
+var CUR_SOURCE_ID = null;
+function loadSources() {
+    api('/api/sources').then(function (d) {
+        if (d.code !== 200) return;
+        document.getElementById('source-tbody').innerHTML = d.data.map(function (r) {
+            var last = r.last_pull ? fmtTime(r.last_pull) : '从未';
+            var status = r.last_status === 'ok'
+                ? '<span class="tag" style="color:#7dff9f;border-color:rgba(125,255,159,.4)">成功</span>'
+                : (r.last_status === 'fail'
+                    ? '<span class="tag" style="color:#ff8080;border-color:rgba(255,80,80,.5)" title="' + esc(r.last_error) + '">失败</span>'
+                    : '<span class="tag">未拉取</span>');
+            var en = r.enabled == 1
+                ? '<span class="tag" style="color:#7dff9f;border-color:rgba(125,255,159,.4)">启用</span>'
+                : '<span class="tag" style="color:#ff8080;border-color:rgba(255,80,80,.5)">禁用</span>';
+            var typeName = { threatfox: 'ThreatFox', urlhaus: 'URLhaus', feodo: 'Feodo', iplist: 'IP列表', csv: '通用CSV' }[r.type] || r.type;
+            return '<tr><td>' + r.id + '</td><td>' + esc(r.name) +
+                '<div class="hint">' + esc(r.last_error || '') + '</div></td><td><span class="tag">' + typeName + '</span></td>' +
+                '<td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.url) + '">' + esc(r.url || '（默认地址）') + '</td>' +
+                '<td>' + r.interval_min + '</td><td>' + (r.keep_days ? r.keep_days : '永久') + '</td><td>' + en + '</td>' +
+                '<td>' + last + '</td><td>' + status + '</td><td>' + r.last_count + '</td>' +
+                '<td>' +
+                '<button class="btn btn-ghost btn-sm" onclick="pullSource(' + r.id + ')">立即拉取</button> ' +
+                '<button class="btn btn-ghost btn-sm" onclick="editSource(' + r.id + ')">编辑</button> ' +
+                '<button class="btn btn-ghost btn-sm" onclick="showSourceLog(' + r.id + ')">日志</button> ' +
+                '<button class="btn btn-danger btn-sm" onclick="delSource(' + r.id + ')">删除</button></td></tr>';
+        }).join('');
+        document.getElementById('source-msg').textContent = '';
+    });
+}
+document.getElementById('source-refresh').addEventListener('click', loadSources);
+function openSourceModal() {
+    document.getElementById('source-modal').classList.add('show');
+    document.getElementById('s-msg').textContent = '';
+}
+function closeSourceModal() { document.getElementById('source-modal').classList.remove('show'); }
+document.getElementById('source-add').addEventListener('click', function () {
+    CUR_SOURCE_ID = null;
+    document.getElementById('source-modal-title').textContent = '新增情报源';
+    ['s-name', 's-url', 's-apikey', 's-mapping'].forEach(function (id) {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('s-type').value = 'threatfox';
+    document.getElementById('s-enabled').value = '1';
+    document.getElementById('s-interval').value = 1440;
+    document.getElementById('s-keepdays').value = 30;
+    openSourceModal();
+});
+function editSource(id) {
+    api('/api/sources').then(function (d) {
+        var r = d.data.filter(function (x) { return x.id === id; })[0];
+        if (!r) return;
+        CUR_SOURCE_ID = id;
+        document.getElementById('source-modal-title').textContent = '编辑情报源 #' + id;
+        document.getElementById('s-name').value = r.name;
+        document.getElementById('s-type').value = r.type;
+        document.getElementById('s-url').value = r.url;
+        document.getElementById('s-apikey').value = r.api_key;
+        document.getElementById('s-interval').value = r.interval_min;
+        document.getElementById('s-keepdays').value = r.keep_days;
+        document.getElementById('s-mapping').value = r.mapping;
+        document.getElementById('s-enabled').value = String(r.enabled);
+        openSourceModal();
+    });
+}
+document.getElementById('s-save').addEventListener('click', function () {
+    var body = {
+        name: document.getElementById('s-name').value,
+        type: document.getElementById('s-type').value,
+        url: document.getElementById('s-url').value,
+        api_key: document.getElementById('s-apikey').value,
+        interval_min: parseInt(document.getElementById('s-interval').value) || 1440,
+        keep_days: parseInt(document.getElementById('s-keepdays').value) || 0,
+        mapping: document.getElementById('s-mapping').value,
+        enabled: document.getElementById('s-enabled').value
+    };
+    if ((body.type === 'csv' || body.type === 'iplist') && !body.url) {
+        document.getElementById('s-msg').textContent = (body.type === 'iplist' ? 'IP 列表' : '通用 CSV') + ' 源必须填写拉取地址';
+        document.getElementById('s-msg').classList.add('err');
+        return;
+    }
+    var p = CUR_SOURCE_ID ? api('/api/sources/' + CUR_SOURCE_ID, { method: 'PUT', body: JSON.stringify(body) })
+                          : api('/api/sources', { method: 'POST', body: JSON.stringify(body) });
+    p.then(function (d) {
+        var msg = document.getElementById('s-msg');
+        if (d.code === 200) { closeSourceModal(); loadSources(); }
+        else { msg.textContent = d.msg || '操作失败'; msg.classList.add('err'); }
+    });
+});
+document.getElementById('s-cancel').addEventListener('click', closeSourceModal);
+document.getElementById('source-modal').addEventListener('click', function (e) {
+    if (e.target === this) closeSourceModal();
+});
+function delSource(id) {
+    if (!confirm('确定删除情报源 #' + id + ' ？已入库的情报将保留')) return;
+    api('/api/sources/' + id, { method: 'DELETE' }).then(function () { loadSources(); });
+}
+function pullSource(id) {
+    var msg = document.getElementById('source-msg');
+    msg.textContent = '正在拉取，请稍候…';
+    api('/api/sources/' + id + '/pull', { method: 'POST' }).then(function (d) {
+        if (d.code === 200) msg.textContent = d.msg + '（新增 ' + d.new + ' / 更新 ' + d.update + ' / 清理 ' + d.removed + '）';
+        else { msg.textContent = d.msg || '拉取失败'; msg.classList.add('err'); }
+        loadSources();
+    });
+}
+function showSourceLog(id) {
+    api('/api/sources/' + id + '/log').then(function (d) {
+        if (d.code !== 200) return;
+        var st = d.last_status === 'ok' ? '成功' : (d.last_status === 'fail' ? '失败' : '未拉取');
+        document.getElementById('sl-log-head').textContent =
+            '情报源 #' + id + ' · 上次拉取: ' + (d.last_pull ? fmtTime(d.last_pull) : '从未') +
+            ' · 状态: ' + st + ' · 条数: ' + d.last_count;
+        document.getElementById('sl-log-body').value = d.log || '（暂无拉取记录）';
+        document.getElementById('source-log-modal').classList.add('show');
+    });
+}
+document.getElementById('sl-close').addEventListener('click', function () {
+    document.getElementById('source-log-modal').classList.remove('show');
+});
+
+/* ================= 系统配置 ================= */
+function loadCfg() {
+    api('/api/config').then(function (d) {
+        if (d.code !== 200) return;
+        document.getElementById('cfg-key').value = d.config.service_key;
+        document.getElementById('cfg-jwt').value = d.config.jwt_secret;
+        document.getElementById('cfg-expire').value = d.config.jwt_expire;
+        document.getElementById('cfg-url').value = d.config.query_url;
+    });
+}
+document.getElementById('cfg-save').addEventListener('click', function () {
+    api('/api/config', { method: 'POST', body: JSON.stringify({
+        service_key: document.getElementById('cfg-key').value,
+        jwt_secret: document.getElementById('cfg-jwt').value,
+        jwt_expire: document.getElementById('cfg-expire').value,
+        query_url: document.getElementById('cfg-url').value
+    }) }).then(function (d) {
+        var msg = document.getElementById('cfg-msg');
+        msg.textContent = d.msg || '已保存';
+        msg.classList.toggle('err', d.code !== 200);
+    });
+});
+document.getElementById('cfg-regen').addEventListener('click', function () {
+    if (!confirm('重新生成后将使旧 KEY 立即失效，确定？')) return;
+    function rnd(n) { var c = 'abcdef0123456789', s = ''; for (var i = 0; i < n; i++) s += c[Math.floor(Math.random() * 16)]; return s; }
+    api('/api/config', { method: 'POST', body: JSON.stringify({ service_key: rnd(32), jwt_secret: rnd(64) }) })
+        .then(function () { loadCfg(); document.getElementById('cfg-msg').textContent = '已重新生成，请同步更新流影侧配置'; });
+});
+document.getElementById('pwd-save').addEventListener('click', function () {
+    api('/api/password', { method: 'POST', body: JSON.stringify({
+        old: document.getElementById('pwd-old').value,
+        new: document.getElementById('pwd-new').value
+    }) }).then(function (d) {
+        var msg = document.getElementById('pwd-msg');
+        msg.textContent = d.msg || '';
+        msg.classList.toggle('err', d.code !== 200);
+        if (d.code === 200) { document.getElementById('pwd-old').value = ''; document.getElementById('pwd-new').value = ''; }
+    });
+});
+
+/* ================= 客户端管理 ================= */
+var CUR_CLIENT_ID = null;
+function loadClients() {
+    api('/api/clients').then(function (d) {
+        if (d.code !== 200) return;
+        document.getElementById('client-tbody').innerHTML = d.data.map(function (r) {
+            var last = r.last_update ? fmtTime(r.last_update) : '从未';
+            var en = r.enabled == 1
+                ? '<span class="tag" style="color:#7dff9f;border-color:rgba(125,255,159,.4)">启用</span>'
+                : '<span class="tag" style="color:#ff8080;border-color:rgba(255,80,80,.5)">禁用</span>';
+            var win = '不限';
+            if (/^\d{4}-\d{2}-\d{2}$/.test(r.update_window || '')) {
+                var dl = new Date(r.update_window + 'T00:00:00');
+                var td = new Date(); td.setHours(0, 0, 0, 0);
+                win = dl < td
+                    ? '<span style="color:#ff8080" title="已超过截止日期，无法全量更新">' + r.update_window + '（已过期）</span>'
+                    : r.update_window;
+            }
+            return '<tr><td>' + r.id + '</td><td>' + esc(r.name) +
+                '<div class="hint">' + esc(r.contact) + '</div></td><td>' + esc(r.order_no) + '</td>' +
+                '<td><code style="font-size:11px;color:#7df9ff">' + esc(r.cli_key) + '</code></td>' +
+                '<td><code style="font-size:11px;color:#7df9ff">' + esc(r.cli_token) + '</code></td>' +
+                '<td>' + win + '</td><td>' + last + '</td><td>' + en + '</td>' +
+                '<td>' +
+                '<button class="btn btn-ghost btn-sm" onclick="editClient(' + r.id + ')">编辑</button> ' +
+                '<button class="btn btn-ghost btn-sm" onclick="regenClient(' + r.id + ',\'key\')">重置Key</button> ' +
+                '<button class="btn btn-ghost btn-sm" onclick="regenClient(' + r.id + ',\'token\')">重置Token</button> ' +
+                '<button class="btn btn-ghost btn-sm" onclick="showClientLog(' + r.id + ')">记录</button> ' +
+                '<button class="btn btn-danger btn-sm" onclick="delClient(' + r.id + ')">删除</button></td></tr>';
+        }).join('');
+    });
+}
+function openClientModal() {
+    document.getElementById('client-modal').classList.add('show');
+    document.getElementById('c-msg').textContent = '';
+}
+function closeClientModal() { document.getElementById('client-modal').classList.remove('show'); }
+document.getElementById('client-add').addEventListener('click', function () {
+    CUR_CLIENT_ID = null;
+    document.getElementById('client-modal-title').textContent = '新增客户端';
+    ['c-name', 'c-order', 'c-contact', 'c-ips', 'c-window'].forEach(function (id) {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('c-enabled').value = '1';
+    openClientModal();
+});
+function editClient(id) {
+    api('/api/clients').then(function (d) {
+        var r = d.data.filter(function (x) { return x.id === id; })[0];
+        if (!r) return;
+        CUR_CLIENT_ID = id;
+        document.getElementById('client-modal-title').textContent = '编辑客户端 #' + id;
+        document.getElementById('c-name').value = r.name;
+        document.getElementById('c-order').value = r.order_no;
+        document.getElementById('c-contact').value = r.contact;
+        document.getElementById('c-ips').value = r.allowed_ips;
+        document.getElementById('c-window').value = /^\d{4}-\d{2}-\d{2}$/.test(r.update_window || '') ? r.update_window : '';
+        document.getElementById('c-enabled').value = String(r.enabled);
+        openClientModal();
+    });
+}
+document.getElementById('c-save').addEventListener('click', function () {
+    var body = {
+        name: document.getElementById('c-name').value,
+        order_no: document.getElementById('c-order').value,
+        contact: document.getElementById('c-contact').value,
+        allowed_ips: document.getElementById('c-ips').value,
+        update_window: document.getElementById('c-window').value,
+        enabled: document.getElementById('c-enabled').value
+    };
+    var p = CUR_CLIENT_ID ? api('/api/clients/' + CUR_CLIENT_ID, { method: 'PUT', body: JSON.stringify(body) })
+                          : api('/api/clients', { method: 'POST', body: JSON.stringify(body) });
+    p.then(function (d) {
+        var msg = document.getElementById('c-msg');
+        if (d.code === 200) {
+            msg.textContent = d.msg;
+            closeClientModal(); loadClients();
+        } else { msg.textContent = d.msg || '操作失败'; msg.classList.add('err'); }
+    });
+});
+document.getElementById('c-cancel').addEventListener('click', closeClientModal);
+document.getElementById('client-modal').addEventListener('click', function (e) {
+    if (e.target === this) closeClientModal();
+});
+function delClient(id) {
+    if (!confirm('确定删除客户端 #' + id + ' ？其 Key/Token 将立即失效')) return;
+    api('/api/clients/' + id, { method: 'DELETE' }).then(function () { loadClients(); });
+}
+function regenClient(id, kind) {
+    if (!confirm('确定重新生成该客户端的 ' + (kind === 'key' ? 'Key' : 'Token') + ' ？旧值将立即失效')) return;
+    api('/api/clients/' + id + '/regen', { method: 'POST', body: JSON.stringify({ kind: kind }) })
+        .then(function (d) {
+            alert(d.msg + (d.cli_key ? '\n新 Key: ' + d.cli_key : '') + (d.cli_token ? '\n新 Token: ' + d.cli_token : ''));
+            loadClients();
+        });
+}
+function showClientLog(id) {
+    api('/api/clients/' + id + '/log').then(function (d) {
+        if (d.code !== 200) return;
+        document.getElementById('cl-log-head').textContent =
+            '客户端 #' + id + ' · 最后更新: ' + (d.last_update ? fmtTime(d.last_update) : '从未');
+        document.getElementById('cl-log-body').value = d.log || '（暂无更新记录）';
+        document.getElementById('client-log-modal').classList.add('show');
+    });
+}
+document.getElementById('cl-close').addEventListener('click', function () {
+    document.getElementById('client-log-modal').classList.remove('show');
+});
+
+/* ================= HTTPS 证书管理 ================= */
+function loadCert() {
+    fetch('/api/cert').then(function (r) { return r.json(); }).then(function (d) {
+        if (d.code !== 200) return;
+        var s = document.getElementById('cert-status');
+        var cert = d.has_cert ? '已上传' : '未上传';
+        var en = d.enabled ? '已启用' : '未启用';
+        var info = d.subject ? (' | ' + d.subject + ' | 有效期至 ' + d.not_after) : '';
+        s.textContent = cert + ' | HTTPS ' + en + info + ' | 管理端口 ' + d.manage_port;
+        document.getElementById('cert-msg').textContent = '';
+    });
+}
+document.getElementById('cert-upload').addEventListener('click', function () {
+    var file = document.getElementById('cert-file').files[0];
+    if (!file) { msg('cert-msg', '请先选择 PFX 证书文件', true); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+        api('/api/cert', { method: 'POST', body: JSON.stringify({
+            action: 'upload',
+            data: reader.result.split(',')[1] || '',
+            pass: document.getElementById('cert-pass').value
+        }) }).then(function (d) {
+            msg('cert-msg', d.msg || '', d.code !== 200);
+            if (d.code === 200) { loadCert(); document.getElementById('cert-file').value = ''; }
+        });
+    };
+    reader.readAsDataURL(file);
+});
+document.getElementById('cert-enable').addEventListener('click', function () {
+    api('/api/cert', { method: 'POST', body: JSON.stringify({ action: 'enable' }) })
+        .then(function (d) { msg('cert-msg', d.msg || '', d.code !== 200); loadCert(); });
+});
+document.getElementById('cert-disable').addEventListener('click', function () {
+    api('/api/cert', { method: 'POST', body: JSON.stringify({ action: 'disable' }) })
+        .then(function (d) { msg('cert-msg', d.msg || '', d.code !== 200); loadCert(); });
+});
+function msg(id, text, isErr) {
+    var el = document.getElementById(id);
+    el.textContent = text;
+    el.classList.toggle('err', !!isErr);
+}
+
+/* ================= 启动 ================= */
+(function init() {
+    if (TOKEN) {
+        api('/api/stats').then(function (d) {
+            if (d.code === 200) {
+                showMain(localStorage.getItem('ti_user') || 'admin');
+                loadStats(); loadIocs();
+            }
+        }).catch(function () { showLogin(); });
+    } else { showLogin(); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: ly_docs
+title: Flow Shadow（流影）文档站点
+scope:
+    - ly_docs/
+source_files: []
+depends_on: []
+related_to: []

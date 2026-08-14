@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: ly_vis
+title: ShadowFlow 可视化交互分析前端工程
+scope:
+    - ly_vis/
+source_files: []
+depends_on: []
+related_to:
+    - path: ly_server

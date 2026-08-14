@@ -1,0 +1,59 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: Q0DeR-MaG1C-BrAnCh-Fo2-NoN-GiT-Or-No-C0MmIt
+nodes_managed: true
+exported_at: "2026-08-12T07:56:14Z"
+modules:
+    "":
+        dir_name: 流影（Flow Shadow）网络安全分析平台
+        title: 流影（Flow Shadow）网络安全分析平台
+        scope: []
+        source_files: []
+        children:
+            - ly_analyser
+            - ly_docs
+            - ly_server
+            - ly_vis
+        depends_on: []
+        related_to: []
+    ly_analyser:
+        dir_name: 流影威胁行为分析引擎（ly_analyser）
+        title: 流影威胁行为分析引擎（ly_analyser）
+        scope:
+            - ly_analyser/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: ly_server
+    ly_docs:
+        dir_name: Flow Shadow（流影）文档站点
+        title: Flow Shadow（流影）文档站点
+        scope:
+            - ly_docs/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    ly_server:
+        dir_name: 流影管理引擎 ly_server
+        title: 流影管理引擎 ly_server
+        scope:
+            - ly_server/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: ly_analyser
+            - path: ly_vis
+    ly_vis:
+        dir_name: ShadowFlow 可视化交互分析前端工程
+        title: ShadowFlow 可视化交互分析前端工程
+        scope:
+            - ly_vis/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: ly_server

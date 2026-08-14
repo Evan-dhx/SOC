@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# AI 辅助上下文
+.qoder/
+
+# 本工程临时脚本（以 _ 开头）
+_*.py
+
+# 数据与凭据
+*.tar.gz
+screenshots/
+login_*.png
+*.pfx
+*.pem
+ti_server/certs/
+ti_server/db.env
+*.pyc
